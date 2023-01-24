@@ -1,36 +1,46 @@
-name: test
+name: Rust
 
-on:
-  push:
-    paths-ignore:
-      - '**.md'
-      - '**.txt'
-      - '**.py'
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - '**.txt'
-      - '**.py'
-
-env:
-  RUST_BACKTRACE: 1
-  CARGO_TARGET_DIR: '${{ github.workspace }}/target'
-  NO_FMT_TEST: 1
+on: [push]
 
 jobs:
-  base:
-    runs-on: ubuntu-latest
+  build-mac:
+    runs-on: macos-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
 
-      - uses: testspace-com/setup-testspace@v1
+      - name: Build
+        run: cargo build --release
+
+      - name: Compress
+        run: ditto -c -k --sequesterRsrc --keepParent ./target/release/duck duck-x86_64-apple-darwin.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          domain: ${{ github.repository_owner }}
+          files: duck-x86_64-apple-darwin.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test
-        run: cargo test -- -Z unstable-options --format junit --report-time > results.xml
+  build-pc:
+    runs-on: windows-2019
+    if: startsWith(github.ref, 'refs/tags/')
 
-      - name: Push result to Testspace server
-        run: testspace results.xml
-        if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Compress
+        run: Compress-Archive target/release/duck.exe -DestinationPath "duck-x86_64-pc-windows-msvc.zip"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: duck-x86_64-pc-windows-msvc.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
