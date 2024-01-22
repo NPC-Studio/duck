@@ -45,6 +45,8 @@ mod non_simplified_expression;
 pub use non_simplified_expression::NonSimplifiedExpression;
 mod not_preference;
 pub use not_preference::NotPreference;
+mod null_coalescence_equal;
+pub use null_coalescence_equal::NullCoalescenceEqual;
 mod or_preference;
 pub use or_preference::OrPreference;
 mod room_goto;
