@@ -213,7 +213,7 @@ fn explain(name: String) -> i32 {
             NonSimplifiedExpression::default_level(),
         ),
         "not_preference" => (NotPreference::explanation().to_string(), NotPreference::default_level()),
-        "with_loop" => (
+        "null_coalescence_equal" => (
             NullCoalescenceEqual::explanation().to_string(),
             NullCoalescenceEqual::default_level(),
         ),
@@ -269,7 +269,10 @@ fn explain(name: String) -> i32 {
             VarPrefixViolation::explanation().to_string(),
             VarPrefixViolation::default_level(),
         ),
-        "with_loop" => (WithLoop::explanation().to_string(), WithLoop::default_level()),
+        "null_coalesence_equal" => (
+            NullCoalescenceEqual::explanation().to_string(),
+            NullCoalescenceEqual::default_level(),
+        ),
         // @end explain. Do not remove!
         _ => {
             println!(
