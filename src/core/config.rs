@@ -117,7 +117,7 @@ impl Config {
                 ("non_constant_default_parameter".into(), LintLevel::Warn),
                 ("non_simplified_expression".into(), LintLevel::Warn),
                 ("not_preference".into(), LintLevel::Allow),
-                ("with_loop".into(), LintLevel::Allow),
+                ("null_coalescence_equal".into(), LintLevel::Allow),
                 ("or_preference".into(), LintLevel::Allow),
                 ("room_goto".into(), LintLevel::Allow),
                 ("show_debug_message".into(), LintLevel::Allow),
