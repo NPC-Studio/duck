@@ -52,6 +52,7 @@ pub fn process_stmt_early(stmt: &Stmt, reports: &mut Vec<Diagnostic<FileId>>, co
     run_early_lint_on_stmt::<InvalidAssignment>(stmt, config, reports);
     run_early_lint_on_stmt::<MissingDefaultCase>(stmt, config, reports);
     run_early_lint_on_stmt::<MultiVarDeclaration>(stmt, config, reports);
+    run_early_lint_on_stmt::<NullCoalescenceEqual>(stmt, config, reports);
     run_early_lint_on_stmt::<SingleSwitchCase>(stmt, config, reports);
     run_early_lint_on_stmt::<SuspicousConstantUsage>(stmt, config, reports);
     run_early_lint_on_stmt::<SwitchWithoutCase>(stmt, config, reports);

@@ -213,6 +213,10 @@ fn explain(name: String) -> i32 {
             NonSimplifiedExpression::default_level(),
         ),
         "not_preference" => (NotPreference::explanation().to_string(), NotPreference::default_level()),
+        "with_loop" => (
+            NullCoalescenceEqual::explanation().to_string(),
+            NullCoalescenceEqual::default_level(),
+        ),
         "or_preference" => (OrPreference::explanation().to_string(), OrPreference::default_level()),
         "room_goto" => (RoomGoto::explanation().to_string(), RoomGoto::default_level()),
         "show_debug_message" => (

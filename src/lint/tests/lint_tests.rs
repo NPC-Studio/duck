@@ -678,3 +678,13 @@ fn unused_local_variable() {
         0,
     );
 }
+
+#[test]
+fn null_coalescence_equal() {
+    harness_lint::<crate::lint::collection::NullCoalescenceEqual>(
+        "
+            a ??= 0;
+        ",
+        1,
+    );
+}
