@@ -1,7 +1,7 @@
 use crate::{
     Config, FileId, GmlLibrary,
     lint::{collection::*, *},
-    parse::{Ast, Expr, ParseVisitor, Parser, Stmt},
+    parse::{Ast, Expr, ExprKind, Function, ParseVisitor, Parser, Stmt, StmtKind},
 };
 use async_walkdir::{DirEntry, Filtering, WalkDir};
 use codespan_reporting::diagnostic::Diagnostic;
@@ -104,15 +104,15 @@ pub fn process_expr_early(expr: &mut Expr, reports: &mut Vec<Diagnostic<FileId>>
 ///
 /// NOTE: This function is largely auto-generated! See `CONTRIBUTING.md` for
 /// more information.
-pub fn process_stmt_late(stmt: &Stmt, reports: &mut Vec<Diagnostic<FileId>>, config: &Config) {
+pub fn process_stmt_late(stmt: &Stmt, reports: &mut Vec<Diagnostic<FileId>>, config: &Config, ctx: &Ctx) {
     // @late stmt calls. Do not remove this comment!
-    run_late_lint_on_stmt::<MissingCaseMember>(stmt, config, reports);
+    run_late_lint_on_stmt::<MissingCaseMember>(stmt, config, ctx, reports);
     // @end late stmt calls. Do not remove this comment!
 
     // Recurse...
     let stmt = stmt.kind();
-    stmt.visit_child_stmts(|stmt| process_stmt_late(stmt, reports, config));
-    stmt.visit_child_exprs(|expr| process_expr_late(expr, reports, config));
+    stmt.visit_child_stmts(|stmt| process_stmt_late(stmt, reports, config, ctx));
+    stmt.visit_child_exprs(|expr| process_expr_late(expr, reports, config, ctx));
 }
 
 /// Runs an expression through the late pass, running any lint that
@@ -120,14 +120,15 @@ pub fn process_stmt_late(stmt: &Stmt, reports: &mut Vec<Diagnostic<FileId>>, con
 ///
 ///  NOTE: This function is largely auto-generated! See `CONTRIBUTING.md`
 /// for more information.
-fn process_expr_late(expr: &Expr, reports: &mut Vec<Diagnostic<FileId>>, config: &Config) {
+fn process_expr_late(expr: &Expr, reports: &mut Vec<Diagnostic<FileId>>, config: &Config, ctx: &Ctx) {
     // @late expr calls. Do not remove this comment!
-    run_late_lint_on_expr::<NonConstantDefaultParameter>(expr, config, reports);
+    run_late_lint_on_expr::<FunctionNameAsParameter>(expr, config, ctx, reports);
+    run_late_lint_on_expr::<NonConstantDefaultParameter>(expr, config, ctx, reports);
     // @end late expr calls. Do not remove this comment!
 
     // Recurse...
-    expr.visit_child_stmts(|stmt| process_stmt_late(stmt, reports, config));
-    expr.visit_child_exprs(|expr| process_expr_late(expr, reports, config));
+    expr.visit_child_stmts(|stmt| process_stmt_late(stmt, reports, config, ctx));
+    expr.visit_child_exprs(|expr| process_expr_late(expr, reports, config, ctx));
 }
 
 /// Performs a given [EarlyStmtPass] on a statement.
@@ -157,20 +158,30 @@ fn run_early_lint_on_expr<T: Lint + EarlyExprPass>(
 }
 
 /// Performs a given [LateStmtPass] on a statement.
-fn run_late_lint_on_stmt<T: Lint + LateStmtPass>(stmt: &Stmt, config: &Config, reports: &mut Vec<Diagnostic<FileId>>) {
+fn run_late_lint_on_stmt<T: Lint + LateStmtPass>(
+    stmt: &Stmt,
+    config: &Config,
+    ctx: &Ctx,
+    reports: &mut Vec<Diagnostic<FileId>>,
+) {
     if stmt.tag().is_none_or(|tag| !tag.eq(&("allow", Some(T::tag()))))
         && *config.get_lint_level_setting(T::tag(), T::default_level()) != LintLevel::Allow
     {
-        T::visit_stmt_late(stmt, config, reports);
+        T::visit_stmt_late(stmt, config, ctx, reports);
     }
 }
 
 /// Performs a given [LateExprPass] on a statement.
-fn run_late_lint_on_expr<T: Lint + LateExprPass>(expr: &Expr, config: &Config, reports: &mut Vec<Diagnostic<FileId>>) {
+fn run_late_lint_on_expr<T: Lint + LateExprPass>(
+    expr: &Expr,
+    config: &Config,
+    ctx: &Ctx,
+    reports: &mut Vec<Diagnostic<FileId>>,
+) {
     if expr.tag().is_none_or(|tag| !tag.eq(&("allow", Some(T::tag()))))
         && *config.get_lint_level_setting(T::tag(), T::default_level()) != LintLevel::Allow
     {
-        T::visit_expr_late(expr, config, reports);
+        T::visit_expr_late(expr, config, ctx, reports);
     }
 }
 
@@ -297,23 +308,34 @@ pub fn start_early_pass(
     Receiver<Stmt>,
     Sender<Vec<Diagnostic<FileId>>>,
     Receiver<Vec<Diagnostic<FileId>>>,
+    Receiver<Ctx>,
     JoinHandle<()>,
 ) {
-    let (report_sender, report_receiver) = channel::<Vec<Diagnostic<FileId>>>(1000);
-    let (stmt_sender, stmt_reciever) = channel::<Stmt>(1000);
+    let (report_sender, report_receiver) = channel::<Vec<Diagnostic<FileId>>>(100000000);
+    let (stmt_sender, stmt_reciever) = channel::<Stmt>(100000000);
+    let (ctx_sender, ctx_reciever) = channel::<Ctx>(100000000);
     let sender = report_sender.clone();
+    let mut ctx = Ctx::default();
     let handle = tokio::task::spawn(async move {
         while let Some(ast) = ast_receiever.recv().await {
             let config = config.clone();
             for mut stmt in ast.unpack() {
                 let mut reports = vec![];
+
+                if let StmtKind::Expr(expr) = stmt.kind() {
+                    if let ExprKind::Function(Function { name: Some(name), .. }) = expr.kind() {
+                        ctx.global_function_names.push(name.to_string());
+                    }
+                }
+
                 process_stmt_early(&mut stmt, &mut reports, config.as_ref());
                 stmt_sender.send(stmt).await.unwrap();
                 sender.send(reports).await.unwrap();
             }
         }
+        ctx_sender.send(ctx).await.unwrap();
     });
-    (stmt_reciever, report_sender, report_receiver, handle)
+    (stmt_reciever, report_sender, report_receiver, ctx_reciever, handle)
 }
 
 /// Creates Tokio tasks for all of the provided `StmtIteration`s,
@@ -324,6 +346,7 @@ pub fn start_early_pass(
 /// Panics if the receiver for the sender closes. This should not be possible!
 pub fn start_late_pass(
     config: Arc<Config>,
+    ctx: Ctx,
     mut stmt_receiver: Receiver<Stmt>,
     report_sender: Sender<Vec<Diagnostic<FileId>>>,
     mut report_receiver: Receiver<Vec<Diagnostic<FileId>>>,
@@ -332,7 +355,7 @@ pub fn start_late_pass(
         while let Some(stmt) = stmt_receiver.recv().await {
             let config = config.clone();
             let mut reports = vec![];
-            process_stmt_late(&stmt, &mut reports, config.as_ref());
+            process_stmt_late(&stmt, &mut reports, config.as_ref(), &ctx);
             report_sender.send(reports).await.unwrap();
         }
     });
@@ -347,3 +370,10 @@ pub fn start_late_pass(
 
 /// TODO
 pub type Pass = (Stmt, Vec<Diagnostic<FileId>>);
+
+/// Information collected throughout the run.
+#[derive(Debug, Default)]
+pub struct Ctx {
+    /// Function names within the global scope.
+    pub global_function_names: Vec<String>,
+}

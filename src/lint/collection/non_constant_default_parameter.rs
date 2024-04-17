@@ -2,6 +2,7 @@ use codespan_reporting::diagnostic::Diagnostic;
 
 use crate::{
     FileId,
+    driver::Ctx,
     lint::{LateExprPass, Lint, LintLevel},
     parse::Expr,
 };
@@ -48,7 +49,7 @@ impl NonConstantDefaultParameter {
 }
 
 impl LateExprPass for NonConstantDefaultParameter {
-    fn visit_expr_late(_expr: &Expr, _config: &crate::Config, _reports: &mut Vec<Diagnostic<FileId>>) {
+    fn visit_expr_late(_expr: &Expr, _config: &crate::Config, _ctx: &Ctx, _reports: &mut Vec<Diagnostic<FileId>>) {
         // if let ExprType::Function(Function { parameters, .. }) = expr.kind() {
         //     for param in parameters {
         //         if let Some(default_expr) = param.assignment_value() {

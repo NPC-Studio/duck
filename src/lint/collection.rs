@@ -23,6 +23,8 @@ mod english_flavor_violation;
 pub use english_flavor_violation::EnglishFlavorViolation;
 mod exit;
 pub use exit::Exit;
+mod function_name_as_parameter;
+pub use function_name_as_parameter::FunctionNameAsParameter;
 mod global;
 pub use global::Global;
 mod invalid_assignment;
