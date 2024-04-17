@@ -373,5 +373,6 @@ pub type Pass = (Stmt, Vec<Diagnostic<FileId>>);
 /// Information collected throughout the run.
 #[derive(Debug, Default)]
 pub struct Ctx {
+    /// The string names of every global function found.
     pub global_function_names: Vec<String>,
 }
