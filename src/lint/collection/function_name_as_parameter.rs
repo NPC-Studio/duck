@@ -30,7 +30,7 @@ impl LateExprPass for FunctionNameAsParameter {
                 if ctx.global_function_names.iter().any(|v| v == param.name()) {
                     reports.push(
                         Self::diagnostic(config)
-                            .with_message("Non constant default parameter")
+                            .with_message("Function name as parameter")
                             .with_labels(vec![
                                 Label::primary(expr.file_id(), param.name_identifier().span)
                                     .with_message("Parameter names cannot be the same as a global function's name"),
