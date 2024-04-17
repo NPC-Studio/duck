@@ -1,5 +1,6 @@
 use crate::{
-    Config, GmlLibrary, driver,
+    Config, GmlLibrary,
+    driver::{self, Ctx},
     lint::{Lint, LintLevel, collection::*},
     parse::*,
 };
@@ -15,6 +16,7 @@ fn config_for_lint<T: Lint>() -> Config {
 
 pub(super) fn harness_lint<T: Lint>(source: &'static str, expected_number: usize) {
     let config = config_for_lint::<T>();
+    let ctx = Ctx::default();
     let mut library = GmlLibrary::new();
     let file_id = library.add("test.gml".into(), source);
     let mut ast = Parser::new_with_default_ids(source, file_id).into_ast().unwrap();
@@ -24,7 +26,7 @@ pub(super) fn harness_lint<T: Lint>(source: &'static str, expected_number: usize
         driver::process_stmt_early(stmt, &mut reports, &config);
     }
     for stmt in ast.stmts() {
-        driver::process_stmt_late(stmt, &mut reports, &config);
+        driver::process_stmt_late(stmt, &mut reports, &config, &ctx);
     }
     let writer = StandardStream::stdout(ColorChoice::Always);
     let config = codespan_reporting::term::Config::default();
@@ -327,13 +329,13 @@ fn multi_var_declaration() {
 
 #[test]
 fn non_constant_default_parameter() {
-    harness_lint::<NonConstantDefaultParameter>(
+    harness_lint::<FunctionNameAsParameter>(
         "
             function(_foo=Bar.Buzz) {}
         ",
         0,
     );
-    harness_lint::<NonConstantDefaultParameter>(
+    harness_lint::<FunctionNameAsParameter>(
         "
             function(_foo=bar) {} // shouldn't fire
         ",

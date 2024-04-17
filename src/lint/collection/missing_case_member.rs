@@ -1,5 +1,6 @@
 use crate::{
     FileId,
+    driver::Ctx,
     lint::{LateStmtPass, Lint, LintLevel},
     parse::Stmt,
 };
@@ -22,7 +23,7 @@ impl Lint for MissingCaseMember {
 }
 
 impl LateStmtPass for MissingCaseMember {
-    fn visit_stmt_late(_stmt: &Stmt, _config: &crate::Config, _reports: &mut Vec<Diagnostic<FileId>>) {
+    fn visit_stmt_late(_stmt: &Stmt, _config: &crate::Config, _ctx: &Ctx, _reports: &mut Vec<Diagnostic<FileId>>) {
         // if let StmtType::Switch(switch) = stmt.kind() {
         //     // Ignore switches that don't pertain to this lint
         //     // TODO: Check for user supplied crash calls here, and enable the lint if they're in

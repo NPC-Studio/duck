@@ -16,6 +16,7 @@ Below are all of the lints currently supported in duck.
 | draw_text | LintLevel::Allow | Projects that implement their own UI frameworks / localization may wish to be restrictive around when and where the `draw_text` functions are called.
 | english_flavor_violation | LintLevel::Allow | GML has many duplicated function names for the sake of supporting both British and American spelling. For consistency, codebases should stick to one.
 | exit | LintLevel::Allow | `return` can always be used in place of exit, which provides more consistency across your codebase.
+| fucntion_name_as_parameter | LintLevel::Deny | This pattern leads to runtime bugs in v2024.2.0.163.
 | global | LintLevel::Allow | While useful at times, global variables reduce saftey since they can be accessed or mutated anywhere, and provide no guarentee that they've already been initiailized.
 | invalid_assignment | LintLevel::Deny | Certain assignment patterns are valid in gml but are undefined behavior and have no valid use cases.
 | invalid_comparison | LintLevel::Deny | Certain types allow comparison checks in gml but are undefined behavior and have no valid use cases.

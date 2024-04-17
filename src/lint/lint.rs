@@ -1,5 +1,6 @@
 use crate::{
     Config, FileId,
+    driver::Ctx,
     parse::{Ast, Expr, Stmt},
 };
 use codespan_reporting::diagnostic::{Diagnostic, Severity};
@@ -66,14 +67,14 @@ pub trait EarlyExprPass {
 /// collected).
 pub trait LateStmtPass {
     /// Runs on statements in the late pass.
-    fn visit_stmt_late(stmt: &Stmt, config: &Config, reports: &mut Vec<Diagnostic<FileId>>);
+    fn visit_stmt_late(stmt: &Stmt, config: &Config, ctx: &Ctx, reports: &mut Vec<Diagnostic<FileId>>);
 }
 
 /// Lints who run a late pass on expresions (after type information has been
 /// collected).
 pub trait LateExprPass {
     /// Runs on expressions in the late pass.
-    fn visit_expr_late(expr: &Expr, config: &Config, reports: &mut Vec<Diagnostic<FileId>>);
+    fn visit_expr_late(expr: &Expr, config: &Config, ctx: &Ctx, reports: &mut Vec<Diagnostic<FileId>>);
 }
 
 /// The three different levels a lint can be set to, changing how it will be
