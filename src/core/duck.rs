@@ -64,10 +64,13 @@ impl Duck {
             driver::start_gml_discovery(project_directory, self.config().ignored_file_paths.clone());
         let (file_receiver, file_handle) = driver::start_file_load(path_receiver);
         let (parse_receiver, parse_handle) = driver::start_parse(file_receiver);
-        let (stmt_receiever, report_sender, report_receiver, _) =
+        let (stmt_receiever, report_sender, report_receiver, mut ctx_receiver, _) =
             driver::start_early_pass(config_arc.clone(), parse_receiver);
+
+        let ctx = ctx_receiver.recv().await.unwrap(); // this defeats the speedy async purpose of the receivers below, but oh well
+
         let mut diagnostics =
-            driver::start_late_pass(config_arc.clone(), stmt_receiever, report_sender, report_receiver).await?;
+            driver::start_late_pass(config_arc.clone(), ctx, stmt_receiever, report_sender, report_receiver).await?;
 
         // Extract any errors that were found...
         let (line_count, library, mut io_errors) = file_handle.await?;

@@ -106,6 +106,7 @@ impl Config {
                 ("draw_text".into(), LintLevel::Allow),
                 ("english_flavor_violation".into(), LintLevel::Allow),
                 ("exit".into(), LintLevel::Allow),
+                ("fucntion_name_as_parameter".into(), LintLevel::Deny),
                 ("global".into(), LintLevel::Allow),
                 ("invalid_assignment".into(), LintLevel::Deny),
                 ("invalid_comparison".into(), LintLevel::Deny),

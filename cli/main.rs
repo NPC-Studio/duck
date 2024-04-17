@@ -179,6 +179,10 @@ fn explain(name: String) -> i32 {
             EnglishFlavorViolation::default_level(),
         ),
         "exit" => (Exit::explanation().to_string(), Exit::default_level()),
+        "fucntion_name_as_parameter" => (
+            FunctionNameAsParameter::explanation().to_string(),
+            FunctionNameAsParameter::default_level(),
+        ),
         "global" => (Global::explanation().to_string(), Global::default_level()),
         "invalid_assignment" => (
             InvalidAssignment::explanation().to_string(),
@@ -262,10 +266,7 @@ fn explain(name: String) -> i32 {
             VarPrefixViolation::explanation().to_string(),
             VarPrefixViolation::default_level(),
         ),
-        "null_coalesence_equal" => (
-            NullCoalescenceEqual::explanation().to_string(),
-            NullCoalescenceEqual::default_level(),
-        ),
+        "with_loop" => (WithLoop::explanation().to_string(), WithLoop::default_level()),
         // @end explain. Do not remove!
         _ => {
             println!(
