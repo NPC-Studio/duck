@@ -1,10 +1,10 @@
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 
 use crate::{
+    FileId,
     driver::Ctx,
     lint::{LateExprPass, Lint, LintLevel},
     parse::{Expr, ExprKind, Function},
-    FileId,
 };
 
 #[derive(Debug, PartialEq)]
